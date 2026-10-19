@@ -33,8 +33,11 @@ dti_app/cache/*
 !dti_app/cache/.gitkeep
 *.log
 
-# Large Datasets, Archives, and ZIP files (> 50-100MB)
+# Large Datasets, Archives, and ZIP files
 *.zip
+!Cleaned dataset files.zip
+!Train and validation csv.zip
+
 *.tar.gz
 *.tar
 *.7z
