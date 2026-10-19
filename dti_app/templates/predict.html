@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Predict Binding Affinity — BioGraph DTI{% endblock %}
+{% block head %}<script src="https://3Dmol.org/build/3Dmol-min.js"></script>{% endblock %}
+
+{% block content %}
+<!-- Page Guide & Purpose Banner -->
+<section class="page-intro">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+    <div>
+      <div style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--cyan-primary); margin-bottom:4px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+        Single Pair Interaction Studio
+      </div>
+      <h1 class="page-title">Predict Drug–Target Binding Affinity</h1>
+      <p class="page-desc">
+        Evaluate how strongly a small-molecule drug candidate binds to a target protein pocket. The neural network computes independent values for 
+        <b>pKi</b> (equilibrium dissociation) and <b>pIC50</b> (50% functional inhibition) using Graph Neural Networks and ESM-2 representations.
+      </p>
+    </div>
+  </div>
+
+  <div class="guide-grid">
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        What This Function Means
+      </div>
+      <p class="guide-text">
+        Estimates the quantitative interaction potency between a chemical graph and an evolutionary protein sequence embedding.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Required Inputs
+      </div>
+      <p class="guide-text">
+        <b>1. Drug:</b> SMILES string (e.g. Erlotinib).<br>
+        <b>2. Target:</b> UniProt ID (e.g. <code>P00533</code>) or full amino-acid sequence.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Conclusion &amp; Interpretation
+      </div>
+      <p class="guide-text">
+        Values &ge; 8.0 indicate <b>nanomolar potency</b> (&le; 10 nM). The system flags novel scaffold uncertainty based on test RMSE.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Two-Column Interactive Workspace -->
+<div class="two-col-layout">
+  <!-- Step 1: Drug Ligand Input -->
+  <section class="card">
+    <div class="card-header">
+      <h3 class="card-title">
+        <span class="step-badge">1</span>
+        Small Molecule (Ligand)
+      </h3>
+      <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">SMILES Representation</span>
+    </div>
+
+    <label class="form-label" for="smiles">SMILES String</label>
+    <div class="input-hint">Simplified Molecular Input Line Entry System (max 400 chars)</div>
+    <textarea id="smiles" rows="3" placeholder="e.g. COCCOc1cc2ncnc(Nc3cccc(C#C)c3)c2cc1OCCOC"></textarea>
+    
+    <div class="chips-label">1-Click Example Drugs:</div>
+    <div id="drug-examples" class="chips-container"></div>
+    <div id="smiles-msg" style="font-size:0.82rem; margin-top:4px; min-height:18px;"></div>
+    
+    <!-- 2D Structure Live Render -->
+    <div style="margin-top: 10px;">
+      <span class="form-label" style="font-size:0.8rem; color:var(--text-dim);">Live 2D Structural Graph Preview:</span>
+      <div id="preview" class="mol-frame">
+        <span style="color:var(--text-dim); font-size:0.85rem;">Enter a SMILES string to render 2D graph structure...</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 2: Protein Target Input -->
+  <section class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+    <div>
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="step-badge">2</span>
+          Protein Target (Receptor)
+        </h3>
+        <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">ESM-2 Embedding</span>
+      </div>
+
+      {% include "_target.html" %}
+    </div>
+
+    <div style="margin-top: 24px; border-top: 1px solid var(--border-card); padding-top: 18px;">
+      <button id="go" class="btn-primary" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        Predict Ki and IC50 Binding Affinity
+      </button>
+      <div id="error" class="alert-box error" hidden style="margin-top:14px;"></div>
+    </div>
+  </section>
+</div>
+
+<!-- Applicability Domain Banner -->
+<div id="banner" class="alert-box warn" hidden></div>
+
+<!-- Results Grid -->
+<div id="results" class="grid-cards" style="margin-top: 8px;" hidden></div>
+
+<!-- Deep Dive Detail Section -->
+<section id="detail" class="card" hidden style="margin-top: 16px;">
+  <div class="card-header">
+    <h3 class="card-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      Molecular Exploration &amp; Explainability Studio
+    </h3>
+    <span style="font-size:0.8rem; color:var(--text-muted);">Inspection Tabs</span>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-pill active" data-tab="t-props">2D Structure &amp; Physicochemical Properties</button>
+    <button class="tab-pill" data-tab="t-3d">3D Conformer Model (ETKDG)</button>
+    <button class="tab-pill" data-tab="t-explain">Atom Occlusion Attribution</button>
+    <button class="tab-pill" data-tab="t-similar">Nearest Training Compounds</button>
+  </div>
+
+  <!-- Tab 1: 2D & Properties -->
+  <div id="t-props" class="tab-pane"></div>
+
+  <!-- Tab 2: 3D Conformer -->
+  <div id="t-3d" class="tab-pane" hidden>
+    <div id="viewer3d" class="viewer-3d-box"></div>
+    <div style="background:rgba(15,23,42,0.8); border:1px solid var(--border-card); border-radius:var(--radius-md); padding:10px 14px; margin-top:10px; font-size:0.82rem; color:var(--text-muted);">
+      <b>Interactive 3D Conformer:</b> Generated using RDKit Distance Geometry (ETKDG) and energy-minimized with MMFF94 force field. 
+      Left-click and drag to rotate, scroll to zoom, right-click to pan. (Note: Represents the isolated ligand conformer, not the docked receptor pose).
+    </div>
+  </div>
+
+  <!-- Tab 3: Atom Explainability -->
+  <div id="t-explain" class="tab-pane" hidden>
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; background:rgba(11,17,32,0.6); padding:12px 16px; border-radius:var(--radius-md); border:1px solid var(--border-card);">
+      <div>
+        <span style="font-weight:600; font-size:0.9rem; color:#fff;">Atom-Level Occlusion Sensitivity</span>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Systematically deletes each atom from the graph and re-evaluates &Delta;pAffinity.</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <label for="explain-ep" style="font-size:0.85rem; font-weight:600; margin:0;">Endpoint:</label>
+        <select id="explain-ep" style="width:auto; padding:6px 12px; font-size:0.85rem;">
+          <option value="Ki">Ki (Inhibition Constant)</option>
+          <option value="IC50">IC50 (Half-Maximal)</option>
+        </select>
+        <button id="explain-go" class="btn-secondary" style="padding:6px 14px; font-size:0.85rem;">Compute Attribution</button>
+      </div>
+    </div>
+    <div id="explain-out"></div>
+  </div>
+
+  <!-- Tab 4: Similar Compounds -->
+  <div id="t-similar" class="tab-pane" hidden></div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/predict.js') }}"></script>
+{% endblock %}

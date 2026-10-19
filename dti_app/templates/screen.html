@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Virtual Screening &amp; Hit Discovery — BioGraph DTI{% endblock %}
+
+{% block content %}
+<!-- Page Guide & Purpose Banner -->
+<section class="page-intro">
+  <div style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--strong-color); margin-bottom:4px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+    Hit Discovery &amp; Prioritization
+  </div>
+  <h1 class="page-title">Virtual Screening &amp; Hit Discovery</h1>
+  <p class="page-desc">
+    Rank large collections of small molecules against a target binding pocket to identify active lead candidates. 
+    Compounds are sorted in descending order of predicted affinity, with high-resolution 2D structural thumbnails rendered for top candidates.
+  </p>
+
+  <div class="guide-grid">
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        What This Function Means
+      </div>
+      <p class="guide-text">
+        In silico screening filters large chemical libraries into a high-confidence shortlist for experimental validation.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Required Inputs
+      </div>
+      <p class="guide-text">
+        1. Library file (.csv, .txt, .smi).<br>
+        2. Target protein (UniProt ID or sequence).<br>
+        3. Target endpoint and Top-N cutoff (e.g. 50).
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Conclusion &amp; Output
+      </div>
+      <p class="guide-text">
+        Ranked leaderboard of top binders with 2D chemical thumbnails and applicability domain flags.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Screening Setup Form -->
+<form id="form">
+  <div class="two-col-layout">
+    <!-- Step 1: Library & Cutoff -->
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="step-badge">1</span>
+          Screening Library &amp; Parameters
+        </h3>
+        <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">Library Settings</span>
+      </div>
+
+      <label class="form-label" for="file">Chemical Library File</label>
+      <div class="input-hint">CSV with 'smiles' column or plain text with 1 SMILES per line</div>
+      <input type="file" id="file" accept=".csv,.tsv,.txt,.smi" required style="padding:12px; margin-bottom:14px;">
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div>
+          <label class="form-label" for="endpoint">Optimization Endpoint</label>
+          <select id="endpoint">
+            <option value="Ki">Ki (Equilibrium Affinity)</option>
+            <option value="IC50">IC50 (Functional Potency)</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="top_n">Top Candidates to Retain</label>
+          <input type="number" id="top_n" value="50" min="1" max="1000">
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: Target Receptor -->
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="step-badge">2</span>
+          Target Receptor Sequence
+        </h3>
+        <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">Protein Target</span>
+      </div>
+
+      {% include "_target.html" %}
+
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-card);">
+        <button class="btn-primary" id="go" type="submit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          Run Virtual Screen &amp; Rank Compounds
+        </button>
+        <div id="error" class="alert-box error" hidden style="margin-top:12px;"></div>
+      </div>
+    </section>
+  </div>
+</form>
+
+<!-- Progress Bar -->
+<div id="progress" class="card" hidden style="margin-top:20px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+    <span style="font-weight:600; font-size:0.88rem; color:#fff;">Screening Library Against Receptor…</span>
+    <span id="progress-msg" style="font-size:0.82rem; color:var(--cyan-primary); font-family:var(--font-mono);"></span>
+  </div>
+  <div class="progress-container">
+    <div class="progress-bar-fill" id="bar-fill"></div>
+  </div>
+</div>
+
+<!-- Ranked Results Output -->
+<div id="out" style="margin-top:20px;"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/screen.js') }}"></script>
+{% endblock %}

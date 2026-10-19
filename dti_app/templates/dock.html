@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}3D Structural Docking — BioGraph DTI{% endblock %}
+{% block head %}<script src="https://3Dmol.org/build/3Dmol-min.js"></script>{% endblock %}
+
+{% block content %}
+<!-- Page Guide & Purpose Banner -->
+<section class="page-intro">
+  <div style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:#f472b6; margin-bottom:4px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+    Structure-Based Molecular Docking
+  </div>
+  <h1 class="page-title">3D Receptor–Ligand Docking Studio</h1>
+  <p class="page-desc">
+    Simulate physical binding poses inside crystallographic protein cavities using <b>AutoDock Vina</b>. 
+    Select a target entry from the RCSB Protein Data Bank (PDB), define the binding site using co-crystallized ligands, 
+    and inspect 3D atom contacts with <b>3Dmol.js</b>.
+  </p>
+
+  <div class="guide-grid">
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        What This Function Means
+      </div>
+      <p class="guide-text">
+        Physics-based conformational search to evaluate steric fit and hydrogen bonding in the 3D binding pocket.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Required Inputs
+      </div>
+      <p class="guide-text">
+        1. 4-letter PDB ID (e.g. <code>1M17</code>).<br>
+        2. Co-crystal ligand (defines pocket centroid).<br>
+        3. Query SMILES (leave empty to redock crystal ligand).
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Conclusion &amp; Physics Score
+      </div>
+      <p class="guide-text">
+        Returns Vina affinity score in <b>kcal/mol</b>. Negative values indicate favorable binding free energy (&Delta;G).
+      </p>
+    </div>
+  </div>
+</section>
+
+<div id="unavailable" class="alert-box warn" hidden></div>
+
+<!-- PDB Inspection Card -->
+<section class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <span class="step-badge">1</span>
+      Target Structure from Protein Data Bank (RCSB PDB)
+    </h3>
+    <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">RCSB REST</span>
+  </div>
+
+  <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;">
+    <div style="width:160px;">
+      <label class="form-label" for="pdb">PDB ID Code</label>
+      <input id="pdb" type="text" maxlength="4" placeholder="e.g. 1M17" style="font-family:var(--font-mono); font-size:1rem; font-weight:700; text-transform:uppercase;">
+    </div>
+    <div>
+      <button id="find" class="btn-primary" type="button" style="padding:10px 20px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-right:4px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        Inspect PDB Cavity
+      </button>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+      <span class="chips-label" style="margin:0;">1-Click PDB Complexes:</span>
+      <span id="pdb-examples" class="chips-container" style="margin:0;"></span>
+    </div>
+  </div>
+
+  <!-- Ligand & Cavity Selector -->
+  <div id="lig-box" hidden style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border-card);">
+    <div class="two-col-layout">
+      <div>
+        <label class="form-label" for="lig">Binding Pocket Cavity Ligand</label>
+        <div class="input-hint">The centroid of this crystallized ligand establishes the docking search box</div>
+        <select id="lig" style="font-family:var(--font-mono);"></select>
+
+        <label class="form-label" style="margin-top:14px;">Protein Chains to Retain</label>
+        <div id="chains" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:4px;"></div>
+      </div>
+
+      <div>
+        <label class="form-label" for="smiles">Ligand to Dock (SMILES)</label>
+        <div class="input-hint">Leave blank to dock the crystal ligand natively into the cavity</div>
+        <textarea id="smiles" rows="2" placeholder="e.g. COCCOc1cc2ncnc(Nc3cccc(C#C)c3)c2cc1OCCOC"></textarea>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px;">
+          <div>
+            <label class="form-label" for="box">Search Box Size (&Aring;)</label>
+            <input id="box" type="number" value="24" min="10" max="40">
+          </div>
+          <div>
+            <label class="form-label" for="exh">Search Exhaustiveness</label>
+            <input id="exh" type="number" value="8" min="1" max="16">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button id="go" class="btn-primary" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        Execute AutoDock Vina Docking
+      </button>
+    </div>
+  </div>
+
+  <div id="error" class="alert-box error" hidden style="margin-top:14px;"></div>
+</section>
+
+<!-- Progress Bar -->
+<div id="progress" class="card" hidden style="margin-top:20px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+    <span style="font-weight:600; font-size:0.88rem; color:#fff;">Performing Vina Conformational Docking…</span>
+    <span id="progress-msg" style="font-size:0.82rem; color:var(--cyan-primary); font-family:var(--font-mono);"></span>
+  </div>
+  <div class="progress-container">
+    <div class="progress-bar-fill" id="bar-fill"></div>
+  </div>
+</div>
+
+<!-- Output 3D Studio -->
+<div id="out" hidden style="margin-top:24px;">
+  <div class="two-col-layout">
+    <div class="card" style="padding:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-weight:700; font-size:0.95rem; color:#fff;">3D Interactive Complex (3Dmol.js)</span>
+        <span style="font-size:0.75rem; color:var(--text-dim);">Left-click: Rotate &bull; Scroll: Zoom &bull; Right-click: Pan</span>
+      </div>
+      <div id="viewer" class="viewer-3d-box" style="height:500px;"></div>
+    </div>
+
+    <div class="card" id="dock-info"></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dock.js') }}"></script>
+{% endblock %}

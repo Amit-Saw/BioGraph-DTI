@@ -1,0 +1,20 @@
+<div class="target-picker" id="{{ picker_id|default('target') }}">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+    <label class="form-label" style="margin-bottom:0;">Target Protein (Receptor Sequence)</label>
+    <span class="input-hint" style="margin-bottom:0;">UniProt ID or FASTA Sequence</span>
+  </div>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 8px;">
+    <select class="tp-example" aria-label="Example curated targets" style="font-size:0.85rem;">
+      <option value="">&mdash; Curated Target Library &mdash;</option>
+    </select>
+    <input class="tp-uniprot" type="text" placeholder="UniProt ID (e.g. P00533)" aria-label="UniProt accession" style="font-family: var(--font-mono); font-size: 0.85rem;">
+    <button type="button" class="tp-fetch btn-secondary" style="padding: 8px 14px; font-size:0.84rem; white-space:nowrap;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px;"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
+      Fetch
+    </button>
+  </div>
+  
+  <textarea class="tp-seq" rows="4" placeholder="Paste amino acid sequence (e.g. MRPSGTAGAALLALLA... or FASTA format)" aria-label="Protein sequence"></textarea>
+  <div class="tp-status" style="font-size:0.8rem; color: var(--cyan-primary); margin-top:4px; font-weight:500;"></div>
+</div>

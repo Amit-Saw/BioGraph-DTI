@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Batch Chemical Screening — BioGraph DTI{% endblock %}
+
+{% block content %}
+<!-- Page Guide & Purpose Banner -->
+<section class="page-intro">
+  <div style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--indigo-primary); margin-bottom:4px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+    Multi-Compound Scoring Pipeline
+  </div>
+  <h1 class="page-title">Batch Chemical Library Scoring</h1>
+  <p class="page-desc">
+    Rapidly score thousands of small molecules against a single target protein. Processes molecules in parallel through the graph neural network, computes binding affinity metrics, and produces a structured, exportable dataset.
+  </p>
+
+  <div class="guide-grid">
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        What This Function Means
+      </div>
+      <p class="guide-text">
+        High-throughput batch evaluation to prioritize drug-like molecules from internal libraries or vendor catalogs.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Required Inputs
+      </div>
+      <p class="guide-text">
+        A CSV/TSV with a <code>smiles</code> column (and optional <code>name</code> column), or text file with 1 SMILES per line (up to 5,000 rows).
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Conclusion &amp; Output
+      </div>
+      <p class="guide-text">
+        Sortable affinity table with calculated concentrations (nM) and direct one-click CSV export.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Form Workflow -->
+<form id="form">
+  <div class="two-col-layout">
+    <!-- Step 1: File Upload -->
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="step-badge">1</span>
+          Upload Molecular Library
+        </h3>
+        <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">CSV / TSV / SMI</span>
+      </div>
+
+      <label class="form-label" for="file">Select Chemical File</label>
+      <div class="input-hint">Supported formats: .csv, .tsv, .txt, .smi (Max: 5,000 compounds / 5 MB)</div>
+      <input type="file" id="file" accept=".csv,.tsv,.txt,.smi" required style="padding:12px; margin-bottom:12px;">
+
+      <div style="background:rgba(11,17,32,0.6); border:1px solid var(--border-card); border-radius:var(--radius-md); padding:12px 16px; margin-top:8px;">
+        <div style="font-size:0.8rem; font-weight:600; color:var(--text-muted); margin-bottom:4px;">Expected CSV Format:</div>
+        <pre style="margin:0; font-family:var(--font-mono); font-size:0.75rem; color:var(--cyan-primary);">name,smiles
+Erlotinib,COCCOc1cc2ncnc(Nc3cccc(C#C)c3)c2cc1OCCOC
+Gefitinib,COc1cc2ncnc(Nc3ccc(F)c(Cl)c3)c2cc1OCCCN1CCOCC1</pre>
+      </div>
+    </section>
+
+    <!-- Step 2: Target & Endpoints -->
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="step-badge">2</span>
+          Target Receptor &amp; Settings
+        </h3>
+        <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">Configuration</span>
+      </div>
+
+      {% include "_target.html" %}
+
+      <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-card);">
+        <label class="form-label">Endpoints to Predict</label>
+        <div style="display:flex; gap: 20px; margin-bottom: 16px;">
+          <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+            <input type="checkbox" name="ep" value="Ki" checked style="width:auto;">
+            <span>Ki (Thermodynamic Affinity)</span>
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+            <input type="checkbox" name="ep" value="IC50" checked style="width:auto;">
+            <span>IC50 (Functional Inhibition)</span>
+          </label>
+        </div>
+
+        <button class="btn-primary" id="go" type="submit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Execute Batch Scoring
+        </button>
+        <div id="error" class="alert-box error" hidden style="margin-top:12px;"></div>
+      </div>
+    </section>
+  </div>
+</form>
+
+<!-- Progress Bar -->
+<div id="progress" class="card" hidden style="margin-top:20px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+    <span style="font-weight:600; font-size:0.88rem; color:#fff;">Batch Processing Status</span>
+    <span id="progress-msg" style="font-size:0.82rem; color:var(--cyan-primary); font-family:var(--font-mono);"></span>
+  </div>
+  <div class="progress-container">
+    <div class="progress-bar-fill" id="bar-fill"></div>
+  </div>
+</div>
+
+<!-- Results Area -->
+<div id="out" style="margin-top:20px;"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/batch.js') }}"></script>
+{% endblock %}

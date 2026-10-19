@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Scientific Architecture &amp; Benchmarks — BioGraph DTI{% endblock %}
+
+{% block content %}
+<!-- Page Guide & Purpose Banner -->
+<section class="page-intro">
+  <div style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--cyan-primary); margin-bottom:4px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+    Scientific Architecture &amp; Empirical Validation
+  </div>
+  <h1 class="page-title">Model Architecture, Benchmarks &amp; Limitations</h1>
+  <p class="page-desc">
+    Complete transparency on neural network topologies, experimental training sets, Bemis-Murcko cold-scaffold generalization, and biological caveats.
+  </p>
+
+  <div class="guide-grid">
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        Neural Network Topology
+      </div>
+      <p class="guide-text">
+        Two-tower late-fusion network: GNN drug graph encoder (128-d) concatenated with frozen ESM-2 (8M) protein embedding (128-d).
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Scaffold Generalization
+      </div>
+      <p class="guide-text">
+        Trained and tested with <b>cold_drug</b> splits to evaluate genuine prospective generalization on unencountered chemotypes.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        Expected Prediction Error
+      </div>
+      <p class="guide-text">
+        Empirical test RMSE on novel scaffolds is <b>~0.98–1.05 log units</b> (~10-fold concentration factor).
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Deep Learning Architecture Blueprint -->
+<section class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      Two-Tower Late-Fusion Architecture Blueprint
+    </h3>
+  </div>
+
+  <div style="background:rgba(11,17,32,0.8); border:1px solid var(--border-card); border-radius:var(--radius-md); padding:20px; font-family:var(--font-mono); font-size:0.84rem; line-height:1.6; overflow-x:auto;">
+SMILES String  ──►  Mol Graph (38-d Atom, 7-d Bond)  ──► [GNN Encoder: AttentiveFP / MPNN] ──► 128-d Drug Vector ──┐
+                                                                                                                   ├─► Concat (256-d) ──► MLP Head ──► pAffinity
+Amino Sequence ──►  ESM-2 (8M Frozen Embeddings)   ──► 320-d Vector ──► [MLP 320→256→128]  ──► 128-d Prot Vector ─┘
+  </div>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:16px;">
+    <div class="guide-box">
+      <div class="guide-label">Ligand Graph Representation</div>
+      <p class="guide-text">
+        Atom features (38-d) encode atomic numbers, degree, formal charge, hybridization, aromaticity, and ring membership. Bond features (7-d) encode single/double/triple/aromatic types, conjugation, and rings.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">ESM-2 Language Model</div>
+      <p class="guide-text">
+        <code>facebook/esm2_t6_8M_UR50D</code> evaluates long sequences using sliding windows (window=900, stride=800), mean-pooling hidden residue states into one 320-dimensional evolutionary representation.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">GNN Graph Encoders</div>
+      <p class="guide-text">
+        <b>AttentiveFP</b> applies atom-level and bond-level attention mechanisms; <b>MPNN</b> utilizes edge-conditioned NNConv message passing with GRU updates and Set2Set readout.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Active Live Checkpoints -->
+<section class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <span class="engine-pill" style="font-size:0.75rem; padding:3px 10px;">Production Checkpoints</span>
+      Active In-Memory Neural Models
+    </h3>
+  </div>
+
+  {% if models %}
+  <div class="table-container">
+    <table class="bio-table">
+      <thead>
+        <tr>
+          <th>Endpoint</th>
+          <th>Split Strategy</th>
+          <th>Model Architecture</th>
+          <th>Epochs Trained</th>
+          <th style="text-align:right;">Held-Out Test RMSE</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in models %}
+        <tr>
+          <td><b style="color:var(--cyan-primary);">${{ m.endpoint }}</b></td>
+          <td><code>{{ m.split }}</code></td>
+          <td><b>{{ m.model }}</b></td>
+          <td>{{ m.epochs_run or 'Converged' }}</td>
+          <td style="text-align:right; font-family:var(--font-mono); font-weight:700; color:#fff;">
+            {{ '%.3f'|format(m.test_rmse) if m.test_rmse is not none else 'N/A' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="color:var(--text-muted);">No models detected in checkpoints directory.</p>
+  {% endif %}
+</section>
+
+<!-- Comprehensive Benchmark Table -->
+<section class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      Comprehensive Model Evaluation &amp; Benchmark Scorecard
+    </h3>
+    <span style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">BindingDB Test Split</span>
+  </div>
+
+  {% if table %}
+  <div class="table-container">
+    <table class="bio-table">
+      <thead>
+        <tr>
+          {% for c in cols %}
+          <th style="{% if c in ['MSE','RMSE','MAE','R2','Pearson','Spearman'] %}text-align:right;{% endif %}">{{ c }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in table %}
+        <tr>
+          {% for c in cols %}
+          <td style="{% if c in ['MSE','RMSE','MAE','R2','Pearson','Spearman'] %}text-align:right; font-family:var(--font-mono); font-weight:600;{% endif %}">
+            {% if c == 'model' %}<b>{{ r[c] }}</b>
+            {% elif c == 'split' %}<code>{{ r[c] }}</code>
+            {% else %}{{ r[c] }}{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div style="font-size:0.8rem; color:var(--text-dim); margin-top:12px; line-height:1.5;">
+    <b>Metric Guidance:</b> Lower RMSE/MAE indicates higher precision (measured in pAffinity units, where 1.0 = a 10-fold concentration factor). 
+    Higher R&sup2;, Pearson R, and Spearman rank correlation indicate stronger linear and relative ranking agreement.
+    <code>cold_drug</code> rows demonstrate true prospective accuracy on novel chemical scaffolds.
+  </div>
+  {% endif %}
+</section>
+
+<!-- Plots -->
+{% if plots %}
+<section class="card">
+  <div class="card-header">
+    <h3 class="card-title">Predicted vs. Experimental Binding Affinity (Held-Out Test Set)</h3>
+  </div>
+  <div class="grid-cards">
+    {% for p in plots %}
+    <div style="background:#fff; border-radius:var(--radius-md); padding:10px; text-align:center;">
+      <img src="{{ url_for('static', filename='img/plots/' + p) }}" alt="{{ p }}" loading="lazy" style="max-width:100%; height:auto; border-radius:var(--radius-sm);">
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Limitations & Responsible AI -->
+<section class="card" style="border-left: 4px solid var(--err-border);">
+  <div class="card-header">
+    <h3 class="card-title" style="color:var(--err-text);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      Known Scientific Limitations &amp; Caveats
+    </h3>
+  </div>
+
+  <div style="font-size:0.88rem; color:var(--text-muted); line-height:1.6;">
+    <ul style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
+      <li><b>Uncertainty Scale on New Scaffolds:</b> For molecules distinct from the training set, typical error is approximately &plusmn;1.0 log unit (a factor of ten in nM). Always consult the uncertainty range bar rather than relying on a point estimate.</li>
+      <li><b>Coarse Protein Representation:</b> The protein is encoded as an evolutionary sequence vector from ESM-2; it does not explicitly represent 3D pocket geometry, conformational flexibility, or induced-fit changes.</li>
+      <li><b>Assay &amp; Laboratory Label Noise:</b> BindingDB aggregates measurements across thousands of research laboratories and diverse experimental assay protocols. This inter-laboratory variance establishes an empirical noise floor of ~0.5–0.7 log units.</li>
+      <li><b>Chemical Domain:</b> Models are trained on small drug-like organic molecules (H, C, N, O, F, P, S, Cl, Br, I). Large peptides, biologics, polymers, and metal complexes are outside the validity domain.</li>
+      <li><b>Regulatory Disclaimer:</b> Predictions are statistical research estimates intended to guide exploratory hypothesis generation and compound prioritization; they are not certified for clinical or regulatory diagnostic decisions.</li>
+    </ul>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+endpoint,split,model,epochs_run,n_test,MSE,RMSE,MAE,R2,Pearson,Spearman,val_RMSE,rank_in_group
+Ki,cold_drug,attentivefp_esm,111,25290,0.96,0.98,0.755,0.502,0.71,0.681,1.02,1
+Ki,cold_drug,mpnn_esm,50,25290,1.204,1.097,0.858,0.376,0.618,0.581,1.118,2
+Ki,cold_drug,gine_esm,23,25290,1.421,1.192,0.952,0.263,0.549,0.501,1.227,3
+Ki,random,mpnn_esm,97,25306,0.844,0.919,0.709,0.6,0.775,0.753,0.912,1
+Ki,random,attentivefp_esm,62,25306,0.958,0.979,0.765,0.546,0.741,0.715,0.972,2
+Ki,random,gine_esm,34,25306,1.369,1.17,0.929,0.351,0.617,0.58,1.158,3
+IC50,cold_drug,attentivefp_esm,54,50376,1.108,1.053,0.821,0.419,0.649,0.646,1.037,1
+IC50,cold_drug,mpnn_esm,30,50376,1.248,1.117,0.883,0.345,0.589,0.586,1.094,2
+IC50,random,attentivefp_esm,88,50376,0.902,0.95,0.738,0.528,0.728,0.724,0.947,1
+IC50,random,mpnn_esm,36,50376,1.094,1.046,0.826,0.428,0.655,0.65,1.048,2

@@ -1,0 +1,17 @@
+services:
+  dti:
+    build:
+      context: .
+      args:
+        WITH_DOCKING: "0"          # set to "1" to include AutoDock Vina + Open Babel
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DTI_HOST: "0.0.0.0"
+    volumes:
+      - ./checkpoints:/app/checkpoints:ro
+      - ./data:/app/data:ro
+      - ./cache:/app/cache
+    restart: unless-stopped

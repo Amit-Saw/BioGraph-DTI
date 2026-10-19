@@ -1,0 +1,15 @@
+# Install PyTorch FIRST (see QUICKSTART.md), then:  pip install -r requirements.txt
+torch
+torch_geometric
+rdkit
+transformers
+flask
+numpy
+pandas
+scipy
+scikit-learn
+requests
+matplotlib
+pytest
+gunicorn; platform_system != "Windows"
+waitress; platform_system == "Windows"

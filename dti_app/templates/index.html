@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}BioGraph DTI — Molecular Binding Affinity &amp; Interaction Platform{% endblock %}
+{% block content %}
+
+<!-- Hero Banner -->
+<section class="page-intro" style="padding: 36px 32px; margin-bottom: 32px;">
+  <div style="max-width: 900px;">
+    <div style="display:inline-flex; align-items:center; gap:8px; background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.3); padding: 4px 12px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 600; color: var(--cyan-primary); margin-bottom: 14px;">
+      <span>Deep Learning for Drug Discovery</span> &bull; <span>Graph Neural Networks + ESM-2</span>
+    </div>
+    <h1 style="font-family: var(--font-display); font-size: 2.3rem; font-weight: 800; line-height: 1.2; margin: 0 0 14px; letter-spacing: -0.03em; color: #fff;">
+      Predict &amp; Explain Molecular Binding Affinity in Seconds
+    </h1>
+    <p style="font-size: 1.05rem; color: var(--text-muted); line-height: 1.65; margin: 0 0 24px;">
+      Estimate small-molecule binding potency against protein targets as <b>pKi</b> (thermodynamic affinity) and <b>pIC50</b> (functional inhibition). 
+      Combines molecular topological graphs via <b>AttentiveFP/MPNN</b> with <b>ESM-2</b> evolutionary language model embeddings, complete with 2D/3D visualization and atom-level occlusion explainability.
+    </p>
+    <div style="display:flex; flex-wrap:wrap; gap: 12px;">
+      <a class="btn-primary" href="{{ url_for('pages.predict') }}" style="width: auto; padding: 12px 28px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+        Launch Single Prediction Studio
+      </a>
+      <a class="btn-secondary" href="{{ url_for('pages.screen') }}" style="padding: 12px 24px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        Virtual Screening
+      </a>
+      <a class="btn-secondary" href="{{ url_for('pages.about') }}" style="padding: 12px 24px;">
+        View Benchmark Metrics
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Biological Metric Primer / What it Means -->
+<section class="card" style="border-left: 4px solid var(--indigo-primary); margin-bottom: 32px;">
+  <div class="card-header" style="border-bottom:none; padding-bottom:0;">
+    <div>
+      <span class="guide-label" style="color:var(--indigo-primary);">Biochemical Primer &amp; Interpretation</span>
+      <h3 class="card-title">How to Read and Interpret Binding Predictions</h3>
+    </div>
+  </div>
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 14px;">
+    <div class="guide-box">
+      <div class="guide-label">&Delta; pAffinity Log Scale</div>
+      <p style="font-size: 0.88rem; color: var(--text-main); margin: 0 0 6px;">
+        <code>pAffinity = 9 &minus; log<sub>10</sub>(nM)</code>
+      </p>
+      <p class="guide-text">
+        Every 1.0 unit change represents a <b>10-fold difference</b> in drug concentration. Higher pAffinity indicates tighter binding at lower concentrations.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">&Delta; Ki vs IC50 Tasks</div>
+      <p class="guide-text">
+        <b>pKi</b> measures true thermodynamic equilibrium dissociation constant.<br>
+        <b>pIC50</b> measures 50% functional inhibition in an assay. Both are trained separately.
+      </p>
+    </div>
+    <div class="guide-box">
+      <div class="guide-label">&Delta; Cold-Drug Scaffold Honesty</div>
+      <p class="guide-text">
+        Predictions use <b>Bemis-Murcko scaffold cold-drug models</b> as primary estimates. Typical expected test RMSE is ~0.98–1.05 log units for novel chemotypes.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top: 18px; background: rgba(11, 17, 32, 0.7); border-radius: var(--radius-md); padding: 12px 18px; display:flex; flex-wrap:wrap; gap: 20px; align-items:center; justify-content:space-around;">
+    <div><span class="potency-badge strong" style="font-size:0.75rem;">Strong (&ge; 8.0)</span> &le; 10 nM (Drug-like lead potency)</div>
+    <div><span class="potency-badge moderate" style="font-size:0.75rem;">Moderate (6.0 &ndash; 8.0)</span> 10 nM &ndash; 1 &micro;M (Hit-to-lead range)</div>
+    <div><span class="potency-badge weak" style="font-size:0.75rem;">Weak (&lt; 6.0)</span> &gt; 1 &micro;M (Low/negligible specific binding)</div>
+  </div>
+</section>
+
+<!-- Functional Module Grid -->
+<h2 style="font-family: var(--font-display); font-size: 1.45rem; font-weight: 800; margin: 0 0 16px; color:#fff;">
+  Available Computational Modules
+</h2>
+
+<div class="grid-cards">
+  <!-- Predict -->
+  <a class="card link" href="{{ url_for('pages.predict') }}" style="text-decoration:none;">
+    <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 12px;">
+      <div style="width:40px; height:40px; border-radius: 10px; background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.3); display:flex; align-items:center; justify-content:center; color: var(--cyan-primary);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </div>
+      <div>
+        <h3 style="font-size:1.1rem; margin:0; color:#fff;">Single Pair Predictor</h3>
+        <span style="font-size:0.75rem; color:var(--cyan-primary); font-weight:600;">1 Drug + 1 Target</span>
+      </div>
+    </div>
+    <p style="font-size:0.88rem; color:var(--text-muted); margin:0 0 12px; line-height: 1.5;">
+      Computes pKi &amp; pIC50, generates interactive 2D structures, Lipinski properties, 3D conformers, atom occlusion sensitivity, and applicability domain checks.
+    </p>
+    <div style="font-size:0.8rem; color:var(--cyan-primary); font-weight:600; display:flex; align-items:center; gap:4px;">
+      Explore Single Predictor &rarr;
+    </div>
+  </a>
+
+  <!-- Batch -->
+  <a class="card link" href="{{ url_for('pages.batch') }}" style="text-decoration:none;">
+    <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 12px;">
+      <div style="width:40px; height:40px; border-radius: 10px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); display:flex; align-items:center; justify-content:center; color: var(--indigo-primary);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      </div>
+      <div>
+        <h3 style="font-size:1.1rem; margin:0; color:#fff;">Batch Processing</h3>
+        <span style="font-size:0.75rem; color:var(--indigo-primary); font-weight:600;">Up to 5,000 Compounds</span>
+      </div>
+    </div>
+    <p style="font-size:0.88rem; color:var(--text-muted); margin:0 0 12px; line-height: 1.5;">
+      Upload a CSV or SMILES text list. Asynchronous background queue scores the entire chemical library against your target and exports a ranked CSV.
+    </p>
+    <div style="font-size:0.8rem; color:var(--indigo-primary); font-weight:600; display:flex; align-items:center; gap:4px;">
+      Run Batch Scoring &rarr;
+    </div>
+  </a>
+
+  <!-- Screen -->
+  <a class="card link" href="{{ url_for('pages.screen') }}" style="text-decoration:none;">
+    <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 12px;">
+      <div style="width:40px; height:40px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); display:flex; align-items:center; justify-content:center; color: var(--strong-color);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+      </div>
+      <div>
+        <h3 style="font-size:1.1rem; margin:0; color:#fff;">Virtual Screening</h3>
+        <span style="font-size:0.75rem; color:var(--strong-color); font-weight:600;">Top-N Prioritization</span>
+      </div>
+    </div>
+    <p style="font-size:0.88rem; color:var(--text-muted); margin:0 0 12px; line-height: 1.5;">
+      Prioritize the highest-affinity lead compounds for a chosen receptor. Displays a ranked leaderboard with rendered 2D structure thumbnails.
+    </p>
+    <div style="font-size:0.8rem; color:var(--strong-color); font-weight:600; display:flex; align-items:center; gap:4px;">
+      Start Screening &rarr;
+    </div>
+  </a>
+
+  <!-- Compare -->
+  <a class="card link" href="{{ url_for('pages.compare') }}" style="text-decoration:none;">
+    <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 12px;">
+      <div style="width:40px; height:40px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); display:flex; align-items:center; justify-content:center; color: var(--mod-color);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+      </div>
+      <div>
+        <h3 style="font-size:1.1rem; margin:0; color:#fff;">Compare &amp; Selectivity</h3>
+        <span style="font-size:0.75rem; color:var(--mod-color); font-weight:600;">Multi-Target Panel</span>
+      </div>
+    </div>
+    <p style="font-size:0.88rem; color:var(--text-muted); margin:0 0 12px; line-height: 1.5;">
+      Compare 2–4 chemical analogues against one receptor, or profile 1 drug across a panel of up to 8 targets to determine off-target selectivity ratios.
+    </p>
+    <div style="font-size:0.8rem; color:var(--mod-color); font-weight:600; display:flex; align-items:center; gap:4px;">
+      Compare Selectivity &rarr;
+    </div>
+  </a>
+
+
+  <!-- About -->
+  <a class="card link" href="{{ url_for('pages.about') }}" style="text-decoration:none;">
+    <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 12px;">
+      <div style="width:40px; height:40px; border-radius: 10px; background: rgba(148, 163, 184, 0.15); border: 1px solid rgba(148, 163, 184, 0.3); display:flex; align-items:center; justify-content:center; color: var(--text-muted);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      </div>
+      <div>
+        <h3 style="font-size:1.1rem; margin:0; color:#fff;">Scientific Metrics</h3>
+        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Transparency &amp; Benchmarks</span>
+      </div>
+    </div>
+    <p style="font-size:0.88rem; color:var(--text-muted); margin:0 0 12px; line-height: 1.5;">
+      Review model test set benchmarks across AttentiveFP, MPNN, and GINE, including Pearson R, Spearman ranking correlation, and applicability boundaries.
+    </p>
+    <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; display:flex; align-items:center; gap:4px;">
+      Read Model Report &rarr;
+    </div>
+  </a>
+</div>
+
+{% endblock %}

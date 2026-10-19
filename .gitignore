@@ -1,0 +1,47 @@
+# Environments & Virtual Envs
+.venv/
+venv/
+env/
+ENV/
+*.env
+!.env.example
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Operating System files
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# IDE & Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary uploads & cache generated at runtime
+dti_app/uploads/*
+!dti_app/uploads/.gitkeep
+dti_app/cache/*
+!dti_app/cache/.gitkeep
+*.log
+
+# Large Datasets, Archives, and ZIP files (> 50-100MB)
+*.zip
+*.tar.gz
+*.tar
+*.7z
+*.rar
+dti_app/data/reference/IC50_train.csv
+dti_app/data/reference/Ki_train.csv
+
+# Compiled executables & binaries
+*.exe
+dti_app/vina.exe
